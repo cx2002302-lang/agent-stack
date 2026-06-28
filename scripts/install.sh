@@ -33,9 +33,31 @@ echo "=========================================="
 echo "  Agent Stack installation complete!"
 echo "=========================================="
 echo ""
+ZK_DB="$HOME/.openclaw/zettelkasten/zettelkasten.db"
+ZK_EXISTS=0
+if [ -f "$ZK_DB" ]; then
+  ZK_EXISTS=1
+  echo "  ⚠ Found existing Zettelkasten database at:"
+  echo "    $ZK_DB"
+  echo "    → Skipping initialization to preserve existing data."
+fi
+
+echo ""
+echo "=========================================="
+echo "  Agent Stack installation complete!"
+echo "=========================================="
+echo ""
 echo "Next steps:"
-echo "  1. Initialize Zettelkasten:  cd packages/zettelkasten && bash scripts/deploy.sh"
+if [ "$ZK_EXISTS" -eq 0 ]; then
+  echo "  1. Initialize Zettelkasten:  cd packages/zettelkasten && bash scripts/deploy.sh"
+else
+  echo "  1. Zettelkasten database exists — skip init and verify:  openclaw zk doctor"
+fi
 echo "  2. Verify SVM CLI:            svm --version"
-echo "  3. Initialize persona:       cd packages/open-upsp && node dist/cli.js init"
+echo "  3. Verify SVM↔ZK sync:        svm sync-status"
+echo "  4. Initialize persona:       cd packages/open-upsp && node dist/cli.js init"
+echo ""
+echo "⚠ IMPORTANT: Never run 'openclaw zk init' on an existing database."
+echo "  It will recreate the zettel_notes table and DROP all your data!"
 echo ""
 echo "See README.md for detailed usage."

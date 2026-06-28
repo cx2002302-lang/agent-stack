@@ -105,3 +105,39 @@ All data under `~/.openclaw/`: ZK database + Markdown notes, SVM SQLite persiste
 - Zettelkasten: MCP (stdio/HTTP)
 - memory-plus: CLI exec + MCP Server (stdio), bidirectional sync via ZK DB
 - open-upsp: CLI exec + SQLite Bridge, read-only ZK DB access
+
+## Schema Compatibility
+
+### Zettelkasten Database Schema (current: v2.1.0)
+
+The ZK database (`~/.openclaw/zettelkasten/zettelkasten.db`) is maintained by the Zettelkasten plugin (`openclaw zk init`). Its DDL is defined in `packages/zettelkasten/src/storage/db-schema.ts`.
+
+### memory-plus ↔ ZK Schema Constraints
+
+memory-plus accesses the ZK database **directly via SQLite** (not through ZK's API). All queries have been verified against ZK schema v2.1.0:
+
+| memory-plus query | ZK table | Columns used | Compatible |
+|---|---|---|---|
+| `load_important_notes()` | `zettel_notes` + `zettel_note_tags` + `zettel_tags` | `folder`, `confidence`, `created_at`, `updated_at`, `id`, `title`, `content` | ✅ |
+| `load_evergreen_notes()` | `zettel_notes` + `zettel_note_stats` | `folder`, `glow_status`, `glow_score`, `id`, `title`, `content` | ✅ |
+| `search_notes()` | `zettel_notes` + `zettel_fts` (FTS5) | `id`, `title`, `content` via `MATCH` | ✅ |
+| `create_note_from_block()` | `zettel_notes` | `id`, `title`, `content`, `type`, `status`, `folder`, `confidence`, `source`, `reviewed`, `file_path`, `created_at`, `updated_at` | ✅ |
+| `mark_note_important()` | `zettel_note_tags` + `zettel_tags` | `note_id`, `tag_id`, `name` | ✅ |
+
+### Safe Operations (READ)
+
+All read operations (`load_important_notes`, `load_recent_notes`, `load_evergreen_notes`, `search_notes`) are safe and non-destructive.
+
+### Safe Operations (WRITE)
+
+- `create_note_from_block()`: INSERT only, never REPLACE or UPDATE existing notes
+- `mark_note_important()`: INSERT OR IGNORE — never deletes or modifies existing tags
+- `_ensure_tag()`: INSERT OR IGNORE — never deletes or modifies existing tags
+
+### ⚠ Known Data Safety Risks
+
+1. **`openclaw zk init` is destructive on existing databases.** The `migrateNotesTableForArchive()` function in `db-schema.ts` recreates the `zettel_notes` table (DROP TABLE + CREATE TABLE) if the CHECK constraint does not include `'archive'`. This migration is one-time and safe for upgrading, but running `zk init` on an already migrated database will re-trigger the table recreation. **Always verify before running `zk init` on a database with existing data.**
+
+2. **Never run `zk init` while memory-plus sync engine is active.** Concurrent writes from both sync engine and ZK init can cause data loss or corruption.
+
+3. **FTS5 rowid mapping.** memory-plus's `search_notes()` previously used `n.rowid IN (SELECT rowid FROM zettel_fts ...)` which was incorrect. **Fixed in v0.2.0:** now uses `n.id IN (SELECT id FROM zettel_fts ...)` to match ZK's actual schema (where `id` is a TEXT primary key, FTS5 stores it as UNINDEXED column).
