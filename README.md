@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v0.1.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-v0.1.1-blue.svg" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
   <img src="https://img.shields.io/badge/OpenClaw-%3E%3D2026.4.23-lightgrey.svg" alt="OpenClaw">
   <img src="https://img.shields.io/badge/Python-%3E%3D3.10-blue.svg" alt="Python">

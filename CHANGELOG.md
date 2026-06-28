@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.1] - 2026-06-28
+
+### Added
+- `scripts/quick-install.sh` — curl|bash one-command install for AI Agent
+- Zettelkasten standalone `packages/zettelkasten/scripts/quick-install.sh`
+- Architecture docs: Schema compatibility table, data safety guarantees
+- `docs/assets/agent-stack-hero.png` — architecture infographic (1280×714, 894KB)
+
+### Changed
+- Updated open-upsp subpackage to v0.3.5 (safety default 60→63, SKILL.md CLI instructions)
+- Updated agent-stack README with one-command install examples for all 3 components
+
 ## [0.1.0] - 2026-06-28
 
 ### Added
