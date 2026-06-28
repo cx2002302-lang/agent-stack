@@ -1,0 +1,52 @@
+# Internal documents - DO NOT publish to GitHub
+AGENTS.md
+ANALYSIS_UPSP_ZETTELKASTEN.md
+PROGRESS.md
+
+# Private configuration
+.env
+.env.local
+*.local.json
+.openclaw/          # 本地 OpenClaw 配置（如果在项目目录中）
+.personas/          # 本地位格数据（如果在项目目录中）
+
+# Test artifacts
+coverage/
+*.test.db
+*.test.db-journal
+tests/fixtures/temp/
+
+# Node.js
+node_modules/
+dist/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Release artifacts
+open-upsp-release/
+
+# Internal docs (not for publish)
+ZK_OPTIMIZATION_SUGGESTIONS.md
+
+# Internal planning docs
+BRIEFING.md
+GOALS.md
+METHODOLOGY.md
+TEST_PLAN.md
+
+# Release packages (generated, not source)
+/open-upsp-*.tar.gz
+/open-upsp-*.zip
+templates/
+
+# Internal promotion materials (not for public release)
+docs/release/CHINESE_PROMO.md
+docs/release/JUEJIN_ARTICLE.md
+docs/release/JUEJIN_TWEET.md
+docs/release/REDDIT_GUIDE.md
+docs/release/SHOW_HN.md
+docs/release/SHOWCASE.md
+docs/release/INDEX.md

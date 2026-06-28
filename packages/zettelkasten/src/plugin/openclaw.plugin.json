@@ -1,0 +1,243 @@
+{
+  "id": "zettelkasten",
+  "name": "Zettelkasten Second Memory System",
+  "description": "Atomic note-taking, bi‑directional linking, and knowledge‑graph distillation for OpenClaw. Provides a structured second‑memory system with confidence‑routed inbox processing and nightly distillation.",
+  "uiHints": {
+    "notesDir": {
+      "label": "Notes Directory",
+      "help": "Filesystem path where Zettelkasten Markdown notes will be stored."
+    },
+    "databasePath": {
+      "label": "Database Path",
+      "help": "SQLite database file path for storing links, tags, and metadata."
+    },
+    "agentConfigs.chat.tools": {
+      "label": "Chat Agent Tools",
+      "help": "MCP tools accessible to the front‑brain (chat agent) – read‑only subset."
+    },
+    "agentConfigs.knowledge.tools": {
+      "label": "Knowledge Agent Tools",
+      "help": "MCP tools accessible to the back‑brain (knowledge agent) – full read‑write access."
+    },
+    "nightlyDistill.enabled": {
+      "label": "Enable Nightly Distillation",
+      "help": "Run CEQRC distillation pipeline every night at 2:00 AM."
+    },
+    "nightlyDistill.cronExpression": {
+      "label": "Nightly Distillation Schedule",
+      "help": "Cron expression for automatic distillation (default: 0 2 * * * – 2 AM daily)."
+    },
+    "sessionHook.enabled": {
+      "label": "Enable Session Hook",
+      "help": "Automatically distill session memories when a session ends."
+    },
+    "confidenceThreshold.zettels": {
+      "label": "Zettels Confidence Threshold",
+      "help": "Minimum confidence score (0.0‑1.0) for a note to be routed to the permanent zettels folder."
+    },
+    "confidenceThreshold.references": {
+      "label": "References Confidence Threshold",
+      "help": "Minimum confidence score for a note to be moved from inbox to references."
+    },
+    "staleReviewDays": {
+      "label": "Stale Review Days",
+      "help": "Number of days after which a note is considered stale for review purposes."
+    },
+    "feishuWebhook": {
+      "label": "Feishu Webhook URL",
+      "help": "Optional Feishu webhook URL for notifications."
+    },
+    "phase6.serendipity.enabled": {
+      "label": "Enable Serendipity Discovery",
+      "help": "Automatically discover unexpected connections between notes."
+    },
+    "phase6.autoMOC.enabled": {
+      "label": "Enable Auto MOC",
+      "help": "Automatically suggest Maps of Content based on note clusters."
+    },
+    "phase6.knowledgeAudit.enabled": {
+      "label": "Enable Knowledge Audit",
+      "help": "Periodically run knowledge health audits."
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "notesDir": {
+        "type": "string",
+        "default": "~/.openclaw/zettelkasten/notes"
+      },
+      "databasePath": {
+        "type": "string",
+        "default": "~/.openclaw/zettelkasten/zettelkasten.db"
+      },
+      "agentConfigs": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "chat": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "tools": {
+                "type": "array",
+                "items": { "type": "string" },
+                "default": [
+                  "zk_search_notes",
+                  "zk_get_note",
+                  "zk_get_backlinks",
+                  "zk_find_path",
+                  "zk_glow_ranking",
+                  "zk_find_zombies",
+                  "zk_search_archived",
+                  "zk_get_archive_log",
+                  "zk_knowledge_heatmap",
+                  "zk_network_graph",
+                  "zk_get_review_panel",
+                  "zk_get_review_stats",
+                  "zk_get_feedback_stats",
+                  "zk_analyze_feedback_trends",
+                  "zk_get_active_prompt",
+                  "zk_get_prompt_stats",
+                  "zk_get_curation_stats"
+                ]
+              }
+            }
+          },
+          "knowledge": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "tools": {
+                "type": "array",
+                "items": { "type": "string" },
+                "default": [
+                  "zk_search_notes",
+                  "zk_get_note",
+                  "zk_get_backlinks",
+                  "zk_find_path",
+                  "zk_glow_ranking",
+                  "zk_find_zombies",
+                  "zk_search_archived",
+                  "zk_get_archive_log",
+                  "zk_knowledge_heatmap",
+                  "zk_network_graph",
+                  "zk_create_note",
+                  "zk_update_note",
+                  "zk_run_ceqrc",
+                  "zk_distill_memory",
+                  "zk_review_note",
+                  "zk_archive_note",
+                  "zk_unarchive_note",
+                  "zk_get_review_panel",
+                  "zk_get_review_stats",
+                  "zk_submit_review",
+                  "zk_submit_feedback",
+                  "zk_get_feedback_stats",
+                  "zk_analyze_feedback_trends",
+                  "zk_get_active_prompt",
+                  "zk_get_prompt_stats",
+                  "zk_get_curation_stats",
+                  "zk_export_samples"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "nightlyDistill": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "cronExpression": {
+            "type": "string",
+            "default": "0 2 * * *"
+          }
+        }
+      },
+      "sessionHook": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "confidenceThreshold": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "zettels": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.7
+          },
+          "references": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.4
+          }
+        }
+      },
+      "staleReviewDays": {
+        "type": "number",
+        "minimum": 1,
+        "maximum": 90,
+        "default": 14
+      },
+      "feishuWebhook": {
+        "type": "string"
+      },
+      "phase6": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "serendipity": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "enabled": { "type": "boolean", "default": true },
+              "topK": { "type": "number", "default": 5 },
+              "minScore": { "type": "number", "default": 0.5 },
+              "autoCreateLinks": { "type": "boolean", "default": false }
+            }
+          },
+          "autoMOC": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "enabled": { "type": "boolean", "default": true },
+              "minClusterSize": { "type": "number", "default": 5 },
+              "maxClusters": { "type": "number", "default": 10 },
+              "autoCreate": { "type": "boolean", "default": false }
+            }
+          },
+          "knowledgeAudit": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "enabled": { "type": "boolean", "default": true },
+              "schedule": { "type": "string", "enum": ["daily", "weekly", "monthly"], "default": "weekly" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "activation": {
+    "onStartup": true
+  },
+  "configContracts": {
+    "compatibilityMigrationPaths": []
+  },
+  "commandAliases": [{ "name": "zk" }]
+}
