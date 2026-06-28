@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.3] - 2026-06-28
+
+### Fixed
+
+- **Restored systemPromptOverride design** — ZK Brain's PROMPT.md is the primary agent instructions for 2026.4.x (systemPromptOverride). Appended b2s/upsp/svm tool usage to both PROMPT.md and SKILL.md for consistent cross-version behavior.
+
 ## [0.1.2] - 2026-06-28
 
 ### Fixed
