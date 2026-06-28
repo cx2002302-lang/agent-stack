@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.2] - 2026-06-28
+
+### Fixed
+
+- **ZK Brain systemPromptOverride bug** — Replaced `systemPromptOverride` pattern (which hid all other skills) with native SKILL.md injection. SKILL.md now contains PROMPT.md content (agent behavior instructions); INSTALL.md and setup-skill-prompt.sh updated to not use systemPromptOverride on OpenClaw >= 2026.6.x
+
 ## [0.1.1] - 2026-06-28
 
 ### Added
