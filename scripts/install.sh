@@ -29,10 +29,6 @@ npm run build
 echo "  ✓ open-upsp installed"
 echo ""
 
-echo "=========================================="
-echo "  Agent Stack installation complete!"
-echo "=========================================="
-echo ""
 ZK_DB="$HOME/.openclaw/zettelkasten/zettelkasten.db"
 ZK_EXISTS=0
 if [ -f "$ZK_DB" ]; then
