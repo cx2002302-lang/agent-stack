@@ -1,10 +1,21 @@
 #!/bin/bash
 #
-# 设置 zettelkasten-brain Skill 的 systemPromptOverride
-# 读取项目 skills/brain/PROMPT.md 并替换动态占位符
+# 设置 zettelkasten-brain Skill 的 systemPromptOverride（仅限 OpenClaw 2026.4.x）
+# 如果 OpenClaw >= 2026.6，则跳过（SKILL.md 处理提示词注入）
 #
 
 set -e
+
+# 检测 OpenClaw 版本
+OC_VERSION=$(openclaw --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1 || echo "0.0.0")
+OC_MAJOR=$(echo "$OC_VERSION" | cut -d. -f1)
+OC_MINOR=$(echo "$OC_VERSION" | cut -d. -f2)
+
+if [ "$OC_MAJOR" -gt 2026 ] || { [ "$OC_MAJOR" -eq 2026 ] && [ "$OC_MINOR" -ge 6 ]; }; then
+  echo "ℹ️  systemPromptOverride not supported in OpenClaw 2026.6+; SKILL.md handles prompt injection"
+  echo "   Skipping systemPromptOverride setup."
+  exit 0
+fi
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SKILL_DIR="${PROJECT_DIR}/skills/brain"
