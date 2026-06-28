@@ -27,6 +27,7 @@ coverage/
 Thumbs.db
 
 # Local
+.local/
 image/
 release/
 archive/
