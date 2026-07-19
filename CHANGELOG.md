@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.1.4] - 2026-07-19
+
+### Added
+- **Zettelkasten subpackage**: synchronized from standalone beta.10, including full `__tests__/` coverage (36 test files), `src/mcp/http-bridge.ts` for Hermes integration, and `@modelcontextprotocol/sdk` dependency
+- **open-upsp subpackage**: schema 2.1.0 compatibility with automatic FTS column detection, isolated test fixtures (`tests/helpers/zk-fixture.ts`)
+- **memory-plus subpackage**: fixed time-bomb in `test_sync.py` (relative dates instead of hardcoded 2026-06-27/28)
+- `scripts/sync-packages.sh` — prevents subpackage drift from standalone repos
+- `scripts/backup-agent-stack.sh` — automated backup with SHA256 verification
+- `scripts/cleanup-docker.sh` — Docker cleanup with safety defaults
+
+### Fixed
+- **Zettelkasten**: MCP server tool name alignment (`zk_run_ceqrc_workflow` → `zk_run_ceqrc`), phase6 schema centralized in `db-schema.ts` with versioned migration framework
+- **open-upsp**: `checkSchemaVersion` now accepts both 2.0.0 and 2.1.0; `searchWithFts` auto-detects `id` column presence and falls back to `rowid` join
+- **memory-plus**: `load_recent_notes` test now uses relative dates, works regardless of current date
+
+### Changed
+- All subpackages now have passing tests: zettelkasten 869, open-upsp 290, memory-plus 80
+- Dependency upgrades: better-sqlite3 12.10→12.11, biome 2.4→2.5, vitest 3.2.4→3.2.7 (Critical vulnerability fix)
+
 ## [0.1.3] - 2026-06-28
 
 ### Fixed
