@@ -13,6 +13,7 @@ from svm.sync.zk_sync import ZKDatabase, SYNC_TAG, HOT_TAG
 
 def _build_mock_zk_db(db_path: str):
     import sqlite3
+    now = datetime.now()
     conn = sqlite3.connect(db_path)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
@@ -64,8 +65,8 @@ def _build_mock_zk_db(db_path: str):
                 f"Content of important note {i}",
                 0.9 + i * 0.02,
                 f"zk/{nid}.md",
-                "2026-06-01T00:00:00",
-                "2026-06-25T00:00:00",
+                (now - timedelta(days=30)).isoformat(),
+                (now - timedelta(days=5)).isoformat(),
             ),
         )
         conn.execute(
@@ -87,8 +88,8 @@ def _build_mock_zk_db(db_path: str):
                 f"Content of recent note {i}",
                 0.5,
                 f"zk/{nid}.md",
-                "2026-06-27T00:00:00",
-                "2026-06-28T00:00:00",
+                (now - timedelta(days=3)).isoformat(),
+                (now - timedelta(days=2)).isoformat(),
             ),
         )
         conn.execute(
@@ -106,8 +107,8 @@ def _build_mock_zk_db(db_path: str):
                 f"Content of evergreen note {i}",
                 0.8,
                 f"zk/{nid}.md",
-                "2026-01-01T00:00:00",
-                "2026-01-01T00:00:00",
+                (now - timedelta(days=180)).isoformat(),
+                (now - timedelta(days=180)).isoformat(),
             ),
         )
         conn.execute(

@@ -1,4 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
+import { promises as fs } from "node:fs";
 import type {
   ZettelNote,
   CreateNoteParams,
@@ -15,9 +16,13 @@ import {
   checkAtomicity,
 } from "../core/utils.js";
 import { DEFAULT_NOTE_TYPE, DEFAULT_NOTE_STATUS, DEFAULT_NOTE_FOLDER, DEFAULT_CONFIDENCE, DEFAULT_TRUNCATE_LENGTH, DEFAULT_PAGE_LIMIT, FTS_SNIPPET_LENGTH } from "../core/constants.js";
+import type { TemplateManager } from "../storage/template-manager.js";
 
 export class NoteRepository {
-  constructor(private db: DatabaseSync) {}
+  constructor(
+    private db: DatabaseSync,
+    private templateManager?: TemplateManager,
+  ) {}
   
   /**
    * 创建新卡片
@@ -36,7 +41,7 @@ export class NoteRepository {
       id = generateZettelId();
     }
     const type = params.type ?? DEFAULT_NOTE_TYPE;
-    const status = DEFAULT_NOTE_STATUS;
+    const status = params.status ?? DEFAULT_NOTE_STATUS;
     const folder = params.folder ?? DEFAULT_NOTE_FOLDER;
     const confidence = params.confidence ?? DEFAULT_CONFIDENCE;
     const source = params.source;
@@ -115,6 +120,9 @@ export class NoteRepository {
     
     // 更新全文搜索索引
     this.updateFtsIndex(note);
+    
+    // 同步写入 Markdown 文件
+    await this.writeNoteFile(note);
     
     return note;
   }
@@ -216,6 +224,7 @@ export class NoteRepository {
     const updatedNote = this.get(id);
     if (updatedNote) {
       this.updateFtsIndex(updatedNote);
+      await this.writeNoteFile(updatedNote);
     }
     
     return updatedNote;
@@ -224,7 +233,17 @@ export class NoteRepository {
   /**
    * 删除卡片
    */
-  delete(id: string): boolean {
+  async delete(id: string): Promise<boolean> {
+    // 先获取文件路径并删除 Markdown 文件
+    const note = this.get(id);
+    if (note) {
+      try {
+        await fs.unlink(note.filePath);
+      } catch {
+        // 文件可能不存在，忽略错误
+      }
+    }
+
     // 删除相关记录 (外键级联删除会处理大部分)
     const result = this.db.prepare(`DELETE FROM zettel_notes WHERE id = ?`).run(id);
     
@@ -256,6 +275,11 @@ export class NoteRepository {
       values.push(params.status);
     }
     
+    if (params.folder) {
+      conditions.push("folder = ?");
+      values.push(params.folder);
+    }
+    
     if (params.sessionKey) {
       conditions.push("session_key = ?");
       values.push(params.sessionKey);
@@ -279,6 +303,16 @@ export class NoteRepository {
     if (params.createdBefore) {
       conditions.push("created_at <= ?");
       values.push(params.createdBefore);
+    }
+    
+    if (params.updatedAfter) {
+      conditions.push("updated_at >= ?");
+      values.push(params.updatedAfter);
+    }
+    
+    if (params.updatedBefore) {
+      conditions.push("updated_at <= ?");
+      values.push(params.updatedBefore);
     }
     
     // 链接过滤 (需要子查询)
@@ -373,17 +407,32 @@ export class NoteRepository {
   /**
    * 全文搜索（FTS + LIKE 双引擎，支持中文）
    */
-  search(query: string, limit: number = DEFAULT_PAGE_LIMIT): SearchResult[] {
-    // 判断是否包含非 ASCII 字符（如中文）
-    const hasNonAscii = /[^\x00-\x7F]/.test(query);
-
+  search(query: string, limit: number = DEFAULT_PAGE_LIMIT, filters?: QueryNotesParams): SearchResult[] {
     // 始终执行 LIKE fallback（确保中文也能搜到）
-    const fallbackResults = this.fallbackSearch(query, limit);
+    const fallbackResults = this.fallbackSearch(query, limit, filters);
 
     // 尝试 FTS 搜索
     let ftsResults: SearchResult[] = [];
     try {
       this.db.prepare("SELECT 1 FROM zettel_fts LIMIT 1").get();
+
+      let whereClause = "WHERE zettel_fts MATCH ?";
+      const filterValues: any[] = [query];
+      if (filters) {
+        if (filters.folder) { whereClause += " AND z.folder = ?"; filterValues.push(filters.folder); }
+        if (filters.minConfidence !== undefined) { whereClause += " AND z.confidence >= ?"; filterValues.push(filters.minConfidence); }
+        if (filters.maxConfidence !== undefined) { whereClause += " AND z.confidence <= ?"; filterValues.push(filters.maxConfidence); }
+        if (filters.createdAfter) { whereClause += " AND z.created_at >= ?"; filterValues.push(filters.createdAfter); }
+        if (filters.createdBefore) { whereClause += " AND z.created_at <= ?"; filterValues.push(filters.createdBefore); }
+        if (filters.updatedAfter) { whereClause += " AND z.updated_at >= ?"; filterValues.push(filters.updatedAfter); }
+        if (filters.updatedBefore) { whereClause += " AND z.updated_at <= ?"; filterValues.push(filters.updatedBefore); }
+        if (filters.tags && filters.tags.length > 0) {
+          const placeholders = filters.tags.map(() => "?").join(", ");
+          whereClause += ` AND z.id IN (SELECT note_id FROM zettel_note_tags WHERE tag_id IN (SELECT id FROM zettel_tags WHERE name IN (${placeholders})))`;
+          filterValues.push(...filters.tags);
+        }
+      }
+
       const rows = this.db.prepare(`
         SELECT
           z.id, z.title, z.content, z.summary, z.type, z.status, z.folder, z.reviewed,
@@ -393,10 +442,10 @@ export class NoteRepository {
           rank
         FROM zettel_notes z
         JOIN zettel_fts ON z.id = zettel_fts.id
-        WHERE zettel_fts MATCH ?
+        ${whereClause}
         ORDER BY rank
         LIMIT ?
-      `).all(query, limit) as any[];
+      `).all(...filterValues, limit) as any[];
 
       ftsResults = rows.map(row => {
         const tags = this.getTags(row.id);
@@ -452,18 +501,34 @@ export class NoteRepository {
   /**
    * 降级搜索（当 FTS 不可用时使用 LIKE 查询）
    */
-  private fallbackSearch(query: string, limit: number = DEFAULT_PAGE_LIMIT): SearchResult[] {
+  private fallbackSearch(query: string, limit: number = DEFAULT_PAGE_LIMIT, filters?: QueryNotesParams): SearchResult[] {
     const searchPattern = `%${query}%`;
+    let whereClause = "WHERE (z.title LIKE ? OR z.content LIKE ?)";
+    const filterValues: any[] = [searchPattern, searchPattern];
+    if (filters) {
+      if (filters.folder) { whereClause += " AND z.folder = ?"; filterValues.push(filters.folder); }
+      if (filters.minConfidence !== undefined) { whereClause += " AND z.confidence >= ?"; filterValues.push(filters.minConfidence); }
+      if (filters.maxConfidence !== undefined) { whereClause += " AND z.confidence <= ?"; filterValues.push(filters.maxConfidence); }
+      if (filters.createdAfter) { whereClause += " AND z.created_at >= ?"; filterValues.push(filters.createdAfter); }
+      if (filters.createdBefore) { whereClause += " AND z.created_at <= ?"; filterValues.push(filters.createdBefore); }
+      if (filters.updatedAfter) { whereClause += " AND z.updated_at >= ?"; filterValues.push(filters.updatedAfter); }
+      if (filters.updatedBefore) { whereClause += " AND z.updated_at <= ?"; filterValues.push(filters.updatedBefore); }
+      if (filters.tags && filters.tags.length > 0) {
+        const placeholders = filters.tags.map(() => "?").join(", ");
+        whereClause += ` AND z.id IN (SELECT note_id FROM zettel_note_tags WHERE tag_id IN (SELECT id FROM zettel_tags WHERE name IN (${placeholders})))`;
+        filterValues.push(...filters.tags);
+      }
+    }
     const rows = this.db.prepare(`
       SELECT
         z.id, z.title, z.content, z.summary, z.type, z.status, z.folder, z.reviewed,
         z.confidence, z.source, z.session_key as "sessionKey", z.file_path as "filePath",
         z.created_at as "createdAt", z.updated_at as "updatedAt"
       FROM zettel_notes z
-      WHERE z.title LIKE ? OR z.content LIKE ?
+      ${whereClause}
       ORDER BY z.updated_at DESC
       LIMIT ?
-    `).all(searchPattern, searchPattern, limit) as any[];
+    `).all(...filterValues, limit) as any[];
     
     return rows.map(row => {
       const tags = this.getTags(row.id);
@@ -629,6 +694,30 @@ export class NoteRepository {
       );
     } catch {
       // FTS 表可能不存在，忽略错误
+    }
+  }
+
+  /**
+   * 将笔记持久化为 Markdown 文件
+   */
+  private async writeNoteFile(note: ZettelNote): Promise<void> {
+    if (!this.templateManager) return;
+
+    try {
+      await this.templateManager.createNoteFile(note.filePath, note.type, {
+        id: note.id,
+        title: note.title,
+        content: note.content,
+        summary: note.summary,
+        tags: note.tags,
+        created_at: note.createdAt,
+        updated_at: note.updatedAt,
+      });
+    } catch (err) {
+      console.warn(
+        `[NoteRepository] Failed to write note file ${note.filePath}:`,
+        err instanceof Error ? err.message : String(err)
+      );
     }
   }
 }

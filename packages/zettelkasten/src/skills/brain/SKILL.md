@@ -7,7 +7,7 @@ description: |
 
 # Zettelkasten Brain — 行为指令
 
-**版本**: 1.0.0-beta.2
+**版本**: 1.0.0-beta.3
 **生效时间**: 2026-06-28
 **进化阶段**: beta
 
@@ -47,7 +47,7 @@ description: |
 - `zk_update_note` — 更新笔记
 - `zk_archive_note` — 归档笔记
 - `zk_unarchive_note` — 恢复归档笔记
-- `zk_run_ceqrc_workflow` — 运行 CEQRC 深度内化工作流
+- `zk_run_ceqrc` — 运行 CEQRC 深度内化工作流
 - `zk_distill_memory` — 蒸馏 OpenClaw memory 日志
 - `zk_review_note` — 审核笔记
 - `zk_submit_review` — 提交审核决定
@@ -293,5 +293,5 @@ svm sync auto                       # 与 ZK 双向同步
 
 ---
 
-*本提示词由 Zettelkasten Brain Skill v1.0.0-beta.2 生成*
+*本提示词由 Zettelkasten Brain Skill v1.0.0-beta.3 生成*
 *下次进化时间: 2026-07-05*
