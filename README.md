@@ -15,9 +15,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v0.1.1-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-v0.1.4-blue.svg" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
-  <img src="https://img.shields.io/badge/OpenClaw-%3E%3D2026.4.23-lightgrey.svg" alt="OpenClaw">
+  <img src="https://img.shields.io/badge/OpenClaw-%3E%3D2026.7.1-lightgrey.svg" alt="OpenClaw">
   <img src="https://img.shields.io/badge/Python-%3E%3D3.10-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Node.js-%3E%3D22.0.0-brightgreen.svg" alt="Node.js">
 </p>
@@ -32,7 +32,7 @@ Agent Stack 由三个独立项目组成，分别对应 AI Agent 的三个核心�
 |------|------|------|------|------|
 | 🧬 **人格** | [open-upsp](packages/open-upsp/) | v0.3.4 | TypeScript | 7 文件身份系统、会话蒸馏、状态演化 |
 | 🧠 **记忆** | [memory-plus (SVM)](packages/memory-plus/) | v0.2.0 | Python | LRU 缓存、关键词检索、双向 ZK 同步 |
-| 📚 **知识** | [Zettelkasten](packages/zettelkasten/) | beta.8.1 | TypeScript | 原子笔记、语义链接、FTS5 全文搜索、CEQRC 蒸馏 |
+| 📚 **知识** | [Zettelkasten](packages/zettelkasten/) | beta.10 | TypeScript | 原子笔记、语义链接、FTS5 全文搜索、CEQRC 蒸馏 |
 
 ---
 

@@ -17,7 +17,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/version-v0.1.0-blue.svg" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
-  <img src="https://img.shields.io/badge/OpenClaw-%3E%3D2026.4.23-lightgrey.svg" alt="OpenClaw">
+  <img src="https://img.shields.io/badge/OpenClaw-%3E%3D2026.7.1-lightgrey.svg" alt="OpenClaw">
   <img src="https://img.shields.io/badge/Python-%3E%3D3.10-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Node.js-%3E%3D22.0.0-brightgreen.svg" alt="Node.js">
 </p>
@@ -32,7 +32,7 @@ Agent Stack consists of three independent projects, each covering a core capabil
 |-------|---------|---------|------|----------|
 | 🧬 **Persona** | [open-upsp](packages/open-upsp/) | v0.3.4 | TypeScript | 7-file identity, session distillation, state evolution |
 | 🧠 **Memory** | [memory-plus (SVM)](packages/memory-plus/) | v0.2.0 | Python | LRU cache, keyword recall, bidirectional ZK sync |
-| 📚 **Knowledge** | [Zettelkasten](packages/zettelkasten/) | beta.8.1 | TypeScript | Atomic notes, semantic links, FTS5 search, CEQRC distillation |
+| 📚 **Knowledge** | [Zettelkasten](packages/zettelkasten/) | beta.10 | TypeScript | Atomic notes, semantic links, FTS5 search, CEQRC distillation |
 
 ---
 
